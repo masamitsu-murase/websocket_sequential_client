@@ -11,6 +11,10 @@ describe WebsocketSequentialClient do
   end
 
   def start_ws_server(&block)
+    mutex = Mutex.new
+    cond_var = ConditionVariable.new
+    started = false
+
     @ws_thread = Thread.start do
       EM.run do
         param = {
@@ -34,7 +38,16 @@ describe WebsocketSequentialClient do
             block.call ws, :onping
           end
         end
+
+        mutex.synchronize do
+          started = true
+          cond_var.signal
+        end
       end
+    end
+
+    mutex.synchronize do
+      cond_var.wait mutex until started
     end
   end
 
