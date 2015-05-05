@@ -1,5 +1,9 @@
 language: ruby
 script: bundle exec rspec spec/websocket_sequential_client_spec.rb
+before_install:
+  - gem update --system
+  - gem --version
+  - gem update bundler
 rvm:
   - 2.0.0
   - 2.1
