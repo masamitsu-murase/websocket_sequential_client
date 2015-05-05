@@ -1,4 +1,4 @@
-# WebsocketSequentialClient [![Build Status](https://travis-ci.org/masamitsu-murase/websocket_sequential_client.svg)](https://travis-ci.org/masamitsu-murase/websocket_sequential_client)
+# WebSocketSequentialClient [![Gem Version](https://badge.fury.io/rb/websocket_sequential_client.svg)](http://badge.fury.io/rb/websocket_sequential_client) [![Build Status](https://travis-ci.org/masamitsu-murase/websocket_sequential_client.svg)](https://travis-ci.org/masamitsu-murase/websocket_sequential_client)
 
 This ruby gem library allows you to access a WebSocket server in a **sequential** way instead of an event-driven way.
 
