@@ -189,7 +189,7 @@ describe WebsocketSequentialClient do
     expect(closed_on_server).to eq false
 
     mutex.synchronize do
-      stop = true
+      stop = false
       cond_var.signal
     end
   end
