@@ -166,13 +166,18 @@ describe WebsocketSequentialClient do
   #----------------------------------------------------------------
   it 'can skip server response when connection' do
     closed_on_server = false
+    mutex = Mutex.new
+    cond_var = ConditionVariable.new
+    stop = true
 
     start_ws_server do |ws, type, msg=nil|
       case type
       when :onmessage
         received_message = msg
       when :onclose
-        Thread.pass
+        mutex.synchronize do
+          cond_var.wait mutex while stop
+        end
         closed_on_server = true
       end
     end
@@ -182,6 +187,11 @@ describe WebsocketSequentialClient do
     ws.close nil, nil, wait_for_response: false
 
     expect(closed_on_server).to eq false
+
+    mutex.synchronize do
+      stop = true
+      cond_var.signal
+    end
   end
 
   #----------------------------------------------------------------
@@ -385,6 +395,7 @@ describe WebsocketSequentialClient do
             end
           end
         end
+        ws.close
       end
       threads.push th
     end
