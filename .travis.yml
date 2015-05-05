@@ -1,0 +1,14 @@
+language: ruby
+script: bundle exec rspec spec/websocket_sequential_client_spec.rb
+rvm:
+  - 2.0.0
+  - 2.1
+  - 2.2
+  - ruby-head
+  - rbx
+  - jruby
+matrix:
+  allow_failures:
+    - rvm: ruby-head
+    - rvm: rbx
+    - rvm: jruby
