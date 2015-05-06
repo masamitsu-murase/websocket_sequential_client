@@ -7,5 +7,6 @@ require "websocket_sequential_client/exception"
 module WebsocketSequentialClient
 end
 
+# <tt>WebSocketSequentialClient</tt> can be used instead of <tt>WebsocketSequentialClient</tt>.
 WebSocketSequentialClient = WebsocketSequentialClient
 

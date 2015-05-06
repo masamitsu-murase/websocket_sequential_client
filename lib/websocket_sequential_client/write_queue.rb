@@ -3,7 +3,7 @@
 require "thread"
 
 module WebsocketSequentialClient
-  class WriteQueue
+  class WriteQueue  #:nodoc:
     def initialize
       @mutex = Mutex.new
       @cond_var = ConditionVariable.new

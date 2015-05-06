@@ -4,15 +4,41 @@ require("socket")
 require("thread")
 
 module WebsocketSequentialClient
+  #
+  # This class provides the access to a WebSocket server.
+  #
   class WebSocket
     DEFAULT_PING_INTERVAL = 20
     DEFAULT_CLOSE_CODE = 1000
     DEFAULT_CLOSE_TIMEOUT = 20
 
-    RECV_SIZE = 1024
+    RECV_SIZE = 1024  #:nodoc:
 
-    WS_PORT = 80
+    WS_PORT = 80  #:nodoc:
 
+    #
+    # Connects to a WebSocket server and returns the connected socket.
+    #
+    # === Parameters
+    # +args+ :: See <tt>initialize</tt> method.
+    # +block+ :: If given, it will be called with the instance of WebSocket as the argument.
+    #
+    # === Examples
+    #   WebSocketSequentialClient::WebSocket.open "ws://server-url" do |ws|
+    #     ws.send "message"
+    #     puts ws.recv
+    #   end
+    #
+    #   ws = WebSocketSequentialClient::WebSocket.open "ws://server-url"
+    #   ws.send "message"
+    #   puts ws.recv
+    #   ws.close
+    #
+    #   WebSocketSequentialClient::WebSocket.open "ws://server-url", { ping: false } do |ws|
+    #     ws.send "message"
+    #     puts ws.recv
+    #   end
+    #
     def self.open *args, &block
       if block
         ws = self.new *args
@@ -26,6 +52,26 @@ module WebsocketSequentialClient
       end
     end
 
+    #
+    # Connects to a WebSocket server and returns the connected socket.
+    #
+    # === Parameters
+    # +url+ :: URL of the server.
+    # +opt+ :: Optional hash parameters.
+    #          <tt>:ping</tt> key specifies whether to enable automatic ping. You can set <tt>true</tt>, <tt>false</tt> or <tt>{ interval: 10 }</tt>. The default value is <tt>true</tt>.
+    #          <tt>:headers</tt> key specifies the additional HTTP headers. You can set <tt>{ headers: { "Cookie" => "name=value" } }</tt>. The default value is <tt>{}</tt> (empty hash).
+    #
+    # === Examples
+    #   # Connect to the server.
+    #   ws = WebSocketSequentialClient::WebSocket.new "ws://server-url"
+    #
+    #   # Disable automatic ping.
+    #   ws = WebSocketSequentialClient::WebSocket.new "ws://server-url", ping: false
+    #
+    #   # Set the ping interval to 10s and send additional HTTP headers.
+    #   opt = { ping: { interval: 10 }, headers: { "Cookie" => "name=value", "Header" => "Value" } }
+    #   ws = WebSocketSequentialClient::WebSocket.open "ws://server-url", opt
+    #
     def initialize url, opt = {}
       opt = { ping: true, headers: {} }.merge opt
 
@@ -66,11 +112,20 @@ module WebsocketSequentialClient
     end
     attr_reader :close_code, :close_reason
 
+    #
+    # Returns true if a received data is in the internal buffer.
+    #
     def available?
       @read_queue.available?
     end
     alias data_available? available?
 
+    #
+    # Returns a received data from the server.
+    # The encoding of the returned data is "UTF-8" for text messages, "ASCII-8BIT" for binary messages.
+    #
+    # This is a <b>blocking</b> method. i.e. This method is blocked until a data is received from the server.
+    #
     def recv
       data = @read_queue.pop
       raise data if data.kind_of? StandardError
@@ -86,6 +141,13 @@ module WebsocketSequentialClient
     end
     alias receive recv
 
+    #
+    # Sends a data to the server.
+    #
+    # === Parameters
+    # +data+ :: String to be sent. The encoding should be "UTF-8" for text messages, "ASCII-8BIT" for binary messages.
+    # +type+ :: Specifies <tt>:text</tt>, <tt>:binary</tt> or <tt>:guess</tt>. If <tt>:guess</tt> is specified, the type is guessed based on the encoding of <tt>data</tt>.
+    #
     def send data, type = :guess
       case type
       when :guess
@@ -113,14 +175,29 @@ module WebsocketSequentialClient
       raise result if result.kind_of? StandardError
     end
 
+    #
+    # Sends a text message.
+    # Same as <tt>send data, :text</tt>.
+    #
     def send_text data
       send data, :text
     end
 
+    #
+    # Sends a binary message.
+    # Same as <tt>send data, :binary</tt>.
+    #
     def send_binary data
       send data, :binary
     end
 
+    #
+    # Close the socket.
+    #
+    # === Parameters
+    # +code+ :: Code of the close frame. The default value is 1000.
+    # +reason+ :: The reason of the close frame. The default value is nil.
+    #
     def close code = nil, reason = nil, opt = {}
       code ||= DEFAULT_CLOSE_CODE
       opt = { timeout: DEFAULT_CLOSE_TIMEOUT, wait_for_response: true }.merge opt
