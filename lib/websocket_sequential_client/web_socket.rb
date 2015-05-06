@@ -26,7 +26,9 @@ module WebsocketSequentialClient
       end
     end
 
-    def initialize url, opt = { ping: true, headers: {} }
+    def initialize url, opt = {}
+      opt = { ping: true, headers: {} }.merge opt
+
       @read_queue = ReadQueue.new
       @write_queue = WriteQueue.new
 
@@ -119,8 +121,10 @@ module WebsocketSequentialClient
       send data, :binary
     end
 
-    def close code = nil, reason = nil, opt = { timeout: DEFAULT_CLOSE_TIMEOUT, wait_for_response: true }
+    def close code = nil, reason = nil, opt = {}
       code ||= DEFAULT_CLOSE_CODE
+      opt = { timeout: DEFAULT_CLOSE_TIMEOUT, wait_for_response: true }.merge opt
+
       param = {
         code: code,
         type: :close,
@@ -129,10 +133,10 @@ module WebsocketSequentialClient
       param[:data] = reason if reason
       frame = ::WebSocket::Frame::Outgoing::Client.new(param)
 
-      @close_timeout = (opt.key?(:timeout) ? opt[:timeout] : DEFAULT_CLOSE_CODE)
+      @close_timeout = opt[:timeout]
       @write_queue.process_frame frame
 
-      wait_for_response = (opt.key?(:wait_for_response) ? opt[:wait_for_response] : true)
+      wait_for_response = opt[:wait_for_response]
       if wait_for_response
         @closed_status_mutex.synchronize do
           @closed_status_cond_var.wait @closed_status_mutex until @closed_status == :closed
@@ -158,7 +162,11 @@ module WebsocketSequentialClient
     end
 
     def start_ping_thread ping_opt
-      interval = (ping_opt[:interval] rescue DEFAULT_PING_INTERVAL)
+      if ping_opt == true
+        interval = DEFAULT_PING_INTERVAL
+      else
+        interval = (ping_opt[:interval] || DEFAULT_PING_INTERVAL)
+      end
       raise ArgumentError, "opt[:ping][:interval] must be a positive number." if interval <= 0
       @ping_th = Thread.start(interval) do |i|
         while true
