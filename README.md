@@ -122,6 +122,8 @@ ws.close
 
 ## Versions
 
+* 1.0.1  
+  Fix handling of optional parameters.
 * 1.0.0  
   Initial release
 
